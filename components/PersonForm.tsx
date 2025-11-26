@@ -101,8 +101,8 @@ export default function PersonForm({ person, existingPeople, onSave, onCancel }:
       sibling: 'sibling',
       grandparent: 'grandchild',
       grandchild: 'grandparent',
-      uncle: 'nephew',
-      aunt: 'niece',
+      uncle: 'other',
+      aunt: 'other',
       cousin: 'cousin',
       other: 'other',
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Person, RelationshipType } from "@/types/family";
+import { Person, RelationshipType, Relationship } from "@/types/family";
 import PersonForm from "@/components/PersonForm";
 import RelationshipForm from "@/components/RelationshipForm";
 import FamilyTreeFlow from "@/components/FamilyTreeFlow";
@@ -36,6 +36,15 @@ export default function Home() {
     relationshipType?: RelationshipType,
     autoAddSpouse?: boolean
   ) => {
+    const createRelationship = (
+      targetId: string,
+      type: RelationshipType
+    ): Relationship => ({
+      id: uuidv4(),
+      personId: targetId,
+      type,
+    });
+
     if (editingPerson) {
       // Update existing person
       setPeople((prev) => prev.map((p) => (p.id === person.id ? person : p)));
@@ -51,11 +60,7 @@ export default function Home() {
               ...person,
               relationships: [
                 ...person.relationships,
-                {
-                  id: uuidv4(),
-                  personId: relatedPersonId,
-                  type: relationshipType,
-                },
+                createRelationship(relatedPersonId, relationshipType),
               ],
             };
 
@@ -85,11 +90,9 @@ export default function Home() {
                 const otherParentPerson = prev.find((p) => p.id === otherParentId);
                 if (otherParentPerson) {
                   // Add spouse relationship between the two parents
-                  personWithRelationship.relationships.push({
-                    id: uuidv4(),
-                    personId: otherParentId,
-                    type: "spouse",
-                  });
+                  personWithRelationship.relationships.push(
+                    createRelationship(otherParentId, "spouse")
+                  );
                 }
               }
             }
@@ -110,11 +113,9 @@ export default function Home() {
                 const spousePerson = prev.find((p) => p.id === spouseId);
                 if (spousePerson) {
                   // Add relationship to child with spouse (child relationship)
-                  personWithRelationship.relationships.push({
-                    id: uuidv4(),
-                    personId: spouseId,
-                    type: "child", // child relationship with spouse
-                  });
+                  personWithRelationship.relationships.push(
+                    createRelationship(spouseId, "child")
+                  );
                 }
               }
             }
@@ -127,11 +128,7 @@ export default function Home() {
                     ...p,
                     relationships: [
                       ...p.relationships,
-                      {
-                        id: uuidv4(),
-                        personId: person.id,
-                        type: reverseType,
-                      },
+                      createRelationship(person.id, reverseType),
                     ],
                   };
                 } else if (spouseId && p.id === spouseId) {
@@ -140,32 +137,24 @@ export default function Home() {
                     ...p,
                     relationships: [
                       ...p.relationships,
-                      {
-                        id: uuidv4(),
-                        personId: person.id,
-                        type: reverseType, // 'parent'
-                      },
+                      createRelationship(person.id, reverseType),
                     ],
                   };
                 } else if (otherParentId && p.id === otherParentId) {
                   // Add reverse spouse relationship to the other parent (when adding parent)
                   // Also ensure the child has parent relationship with this other parent
-                  const hasChildRel = p.relationships.some(r => r.personId === relatedPersonId && r.type === 'parent');
+                  const hasChildRel = p.relationships.some(
+                    (r) => r.personId === relatedPersonId && r.type === "parent"
+                  );
                   return {
                     ...p,
                     relationships: [
                       ...p.relationships,
-                      {
-                        id: uuidv4(),
-                        personId: person.id,
-                        type: "spouse", // The two parents are spouses
-                      },
+                      createRelationship(person.id, "spouse"),
                       // Add parent relationship if not exists
-                      ...(hasChildRel ? [] : [{
-                        id: uuidv4(),
-                        personId: relatedPersonId,
-                        type: "parent" as RelationshipType,
-                      }]),
+                      ...(hasChildRel
+                        ? []
+                        : [createRelationship(relatedPersonId, "parent")]),
                     ],
                   };
                 }
